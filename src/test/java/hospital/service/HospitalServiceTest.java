@@ -194,17 +194,23 @@ public class HospitalServiceTest {
      */
     @Test(expected = IllegalStateException.class)
     public void testAllocateBedWhenAllOccupied() {
-        // Create 21 patients (more than available beds)
+        // Create 20 patients and allocate all 20 beds
         for (int i = 0; i < 20; i++) {
-            Patient patient = new Patient("P" + String.format("%03d", i), "Patient", i + "", 25 + i, "Male", "Condition", PatientCategory.INPATIENT);
+            Patient patient = new Patient("P" + String.format("%03d", i), "Patient", String.valueOf(i), 25 + i, "Male", "Condition", PatientCategory.INPATIENT);
             service.registerPatient(patient);
             service.allocateBed("P" + String.format("%03d", i), "B" + String.format("%02d", i + 1));
         }
         
-        // Try to allocate 21st patient
+        // Try to allocate 21st patient - should fail because no beds available
         Patient patient21 = new Patient("P020", "Last", "Patient", 45, "Female", "Condition", PatientCategory.INPATIENT);
         service.registerPatient(patient21);
-        service.allocateBed("P020", "B21"); // Should throw exception - no beds available
+        
+        // This should throw IllegalStateException because all beds are occupied
+        List<Bed> available = service.getAvailableBeds();
+        assertEquals("No beds should be available", 0, available.size());
+        
+        // Try to allocate to an available bed (there are none)
+        service.allocateBed("P020", "B01"); // Should throw exception - bed already occupied
     }
     
     /**
